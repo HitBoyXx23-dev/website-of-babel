@@ -39,3 +39,7 @@ npm run check
 ```
 
 The Browser automatically removes the old v1 `scramjet-sw.js` registration when upgrading from earlier Website Of Babel releases.
+
+## Deep website discovery
+
+Searching a domain such as `hitboyxx23.dev` now crawls the public site root, reads sitemap files when available, follows internal links to a bounded depth, and exposes discovered pages in Search and Network of Babel. Network expansion preserves page-to-page edges instead of flattening every URL into one host node.
