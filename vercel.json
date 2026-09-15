@@ -1,0 +1,263 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    },
+    {
+      "source": "/data/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, s-maxage=604800, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/browser-config",
+      "destination": "/api/babel?endpoint=browser-config"
+    },
+    {
+      "source": "/api/catalog",
+      "destination": "/api/babel?endpoint=catalog"
+    },
+    {
+      "source": "/api/country",
+      "destination": "/api/babel?endpoint=country"
+    },
+    {
+      "source": "/api/dossier",
+      "destination": "/api/babel?endpoint=dossier"
+    },
+    {
+      "source": "/api/explore",
+      "destination": "/api/babel?endpoint=explore"
+    },
+    {
+      "source": "/api/media-search",
+      "destination": "/api/babel?endpoint=media-search"
+    },
+    {
+      "source": "/api/reader",
+      "destination": "/api/babel?endpoint=reader"
+    },
+    {
+      "source": "/api/recipes",
+      "destination": "/api/babel?endpoint=recipes"
+    },
+    {
+      "source": "/api/research",
+      "destination": "/api/babel?endpoint=research"
+    },
+    {
+      "source": "/api/stats",
+      "destination": "/api/babel?endpoint=stats"
+    },
+    {
+      "source": "/api/topic",
+      "destination": "/api/babel?endpoint=topic"
+    },
+    {
+      "source": "/api/trends",
+      "destination": "/api/babel?endpoint=trends"
+    },
+    {
+      "source": "/api/webgraph",
+      "destination": "/api/babel?endpoint=webgraph"
+    },
+    {
+      "source": "/api/websearch",
+      "destination": "/api/babel?endpoint=websearch"
+    },
+    {
+      "source": "/topic/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/explore",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/research",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/systems",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/network",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/web",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/web-network",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/library",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/lexicon",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/pi",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/numbers",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/universe-numbers",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/palace",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/learn",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dreams",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/paranormal",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/futures",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/people",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/beliefs",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/myths",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/probability",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/possibilities",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/timeline",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/media",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sources",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/infinite",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/workbench",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/search",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/reader",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terminus",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/archive",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/code",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/food",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/languages",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/world",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mature",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/browser",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/arcade",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/rules",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/tools",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
+    }
+  ]
+}

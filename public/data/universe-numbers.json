@@ -1,0 +1,42 @@
+{
+  "updated": "2026-09-15",
+  "groups": [
+    {
+      "name": "SI defining constants",
+      "note": "These numerical values are exact by definition in the International System of Units.",
+      "source": "https://www.bipm.org/en/measurement-units/si-defining-constants",
+      "items": [
+        {"name":"Caesium-133 hyperfine transition frequency","symbol":"ΔνCs","value":"9 192 631 770","unit":"Hz","status":"exact"},
+        {"name":"Speed of light in vacuum","symbol":"c","value":"299 792 458","unit":"m s⁻¹","status":"exact"},
+        {"name":"Planck constant","symbol":"h","value":"6.626 070 15 × 10⁻³⁴","unit":"J s","status":"exact"},
+        {"name":"Elementary charge","symbol":"e","value":"1.602 176 634 × 10⁻¹⁹","unit":"C","status":"exact"},
+        {"name":"Boltzmann constant","symbol":"k","value":"1.380 649 × 10⁻²³","unit":"J K⁻¹","status":"exact"},
+        {"name":"Avogadro constant","symbol":"NA","value":"6.022 140 76 × 10²³","unit":"mol⁻¹","status":"exact"},
+        {"name":"Luminous efficacy at 540 THz","symbol":"Kcd","value":"683","unit":"lm W⁻¹","status":"exact"}
+      ]
+    },
+    {
+      "name": "Measured fundamental constants",
+      "note": "Measured constants have experimental uncertainty. Values here follow the 2022 CODATA adjustment published by NIST.",
+      "source": "https://physics.nist.gov/cuu/pdf/JPCRD2022CODATA.pdf",
+      "items": [
+        {"name":"Newtonian constant of gravitation","symbol":"G","value":"6.674 30(15) × 10⁻¹¹","unit":"m³ kg⁻¹ s⁻²","status":"measured","uncertainty":"relative standard uncertainty 2.2 × 10⁻⁵"},
+        {"name":"Vacuum magnetic permeability","symbol":"μ0","value":"1.256 637 061 27(20) × 10⁻⁶","unit":"N A⁻²","status":"measured","uncertainty":"relative standard uncertainty 1.6 × 10⁻¹⁰"},
+        {"name":"Vacuum electric permittivity","symbol":"ε0","value":"8.854 187 8188(14) × 10⁻¹²","unit":"F m⁻¹","status":"measured","uncertainty":"relative standard uncertainty 1.6 × 10⁻¹⁰"},
+        {"name":"Characteristic impedance of vacuum","symbol":"Z0","value":"376.730 313 412(59)","unit":"Ω","status":"measured","uncertainty":"relative standard uncertainty 1.6 × 10⁻¹⁰"},
+        {"name":"Proton mass","symbol":"mp","value":"1.672 621 925 95(52) × 10⁻²⁷","unit":"kg","status":"measured"}
+      ]
+    },
+    {
+      "name": "Cosmic scale",
+      "note": "Cosmological quantities are inferred from observations and models. They are approximate, not exact constants.",
+      "source": "https://science.nasa.gov/exoplanets/what-is-the-universe/",
+      "items": [
+        {"name":"Age of the universe","symbol":"t₀","value":"about 13.8 billion","unit":"years","status":"observational estimate"},
+        {"name":"Age of the solar system","symbol":"","value":"about 4.6 billion","unit":"years","status":"observational estimate"},
+        {"name":"Age of the universe at recombination","symbol":"","value":"about 380 000","unit":"years","status":"model-based estimate","source":"https://science.nasa.gov/universe/glossary-3/a-g/"},
+        {"name":"Distance to Andromeda Galaxy","symbol":"","value":"about 2.5 million","unit":"light-years","status":"astronomical distance estimate","source":"https://science.nasa.gov/mission/webb/science-overview/science-explainers/how-does-webb-see-back-in-time/"}
+      ]
+    }
+  ]
+}

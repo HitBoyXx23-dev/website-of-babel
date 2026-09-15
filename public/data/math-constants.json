@@ -1,0 +1,32 @@
+{
+  "pi": {
+    "file": "/data/pi-1m.txt",
+    "digits": 1000000,
+    "sha256": "387877db67fdddbde761c053c4376e0b411b10fd2b126fd8b1249963cb628877"
+  },
+  "e": {
+    "file": "/data/e-250k.txt",
+    "digits": 250000,
+    "sha256": "df241d0bae0a82f2b209a59934a0e0770e5c99538f0c62171daddd4f551cea0e"
+  },
+  "phi": {
+    "file": "/data/phi-250k.txt",
+    "digits": 250000,
+    "sha256": "de8ab8fc2cb0189a756537d1100a63d37cebd02436dd664d06366543e4e3fb90"
+  },
+  "sqrt2": {
+    "file": "/data/sqrt2-250k.txt",
+    "digits": 250000,
+    "sha256": "911f1976a2cce1a806badb317db18c9fe925b9eda8ee56f3f15f2c490af52540"
+  },
+  "sqrt3": {
+    "file": "/data/sqrt3-250k.txt",
+    "digits": 250000,
+    "sha256": "547afe1cd34ee09cf424d74f4868734ecb31305965fecaacef8b9c8d44e1e281"
+  },
+  "ln2": {
+    "file": "/data/ln2-250k.txt",
+    "digits": 250000,
+    "sha256": "ec2bab798188dfc61dabf06e5363e80813d9199357f56cc6de3e81ca7bc74d0a"
+  }
+}

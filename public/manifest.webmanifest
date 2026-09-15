@@ -1,0 +1,9 @@
+{
+  "name": "Website Of Babel",
+  "short_name": "Babel",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2efe7",
+  "theme_color": "#173f37",
+  "icons": []
+}
