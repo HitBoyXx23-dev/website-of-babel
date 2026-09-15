@@ -19,7 +19,7 @@ const BABEL_SYSTEMS=[
   {n:'16',name:'Probability Lab',route:'/probability',kind:'CHANCE + GAMBLING MATH',desc:'Dice, cards, roulette-style simulations, expected value, variance, and gambling-risk education.'},
   {n:'17',name:'Possibility Engine',route:'/possibilities',kind:'BRANCHING FUTURES',desc:'Turn a question into multiple plausible branches, assumptions, signals, and discriminating evidence.'},
   {n:'18',name:'Timeline of Babel',route:'/timeline',kind:'TIME + EVENTS',desc:'Build and save timelines for discoveries, religions, technologies, people, stories, or imagined worlds.'},
-  {n:'19',name:'Media of Babel',route:'/media',kind:'IMAGE + VIDEO',desc:'Deterministic image generation, image URLs, direct video, YouTube, Vimeo, and topic media shelves.'},
+  {n:'19',name:'Media of Babel',route:'/media',kind:'IMAGE + VIDEO',desc:'Images, direct video, public archives, Wikimedia, Openverse, NASA media, PeerTube, audio, and files.'},
   {n:'20',name:'Source Atlas',route:'/sources',kind:'SOURCE MAP',desc:'Know where to look: primary sources, papers, books, archives, datasets, code, news, and communities.'},
   {n:'∞',name:'Infinite Page',route:'/infinite',kind:'ENDLESS DISCOVERY',desc:'A continuously growing page of topics, combinations, questions, and branches with no final page.'}
 ];

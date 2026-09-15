@@ -1,0 +1,408 @@
+{
+  "title": "Rules of the Internet",
+  "edition": "Website Of Babel 100-rule cultural archive",
+  "canonical": false,
+  "note": "There has never been one stable canonical 100-rule list. This archive preserves the familiar numbering and major recurring ideas while paraphrasing variants and adding historical context rather than presenting the rules as real laws.",
+  "rules": [
+    {
+      "number": 1,
+      "text": "Do not talk about /b/."
+    },
+    {
+      "number": 2,
+      "text": "Do not talk about /b/ again."
+    },
+    {
+      "number": 3,
+      "text": "Anonymous is a collective identity, not a single person."
+    },
+    {
+      "number": 4,
+      "text": "Anonymous is legion, in the language of the old meme."
+    },
+    {
+      "number": 5,
+      "text": "The old Anonymous myth says it neither forgives nor forgets."
+    },
+    {
+      "number": 6,
+      "text": "Anonymous can be chaotic, senseless, and uncaring."
+    },
+    {
+      "number": 7,
+      "text": "Anonymous can still deliver when nobody expects it."
+    },
+    {
+      "number": 8,
+      "text": "There are no real rules about posting, until a community enforces some."
+    },
+    {
+      "number": 9,
+      "text": "There are no real rules about moderation either, but bans still happen."
+    },
+    {
+      "number": 10,
+      "text": "Rival-site arguments are rarely worth your time."
+    },
+    {
+      "number": 11,
+      "text": "Carefully prepared arguments can simply be ignored online."
+    },
+    {
+      "number": 12,
+      "text": "Anything you post can be quoted or used against you later."
+    },
+    {
+      "number": 13,
+      "text": "Anything you post can be remixed into something else."
+    },
+    {
+      "number": 14,
+      "text": "Do not argue endlessly with trolls because attention is often the reward."
+    },
+    {
+      "number": 15,
+      "text": "The harder you force a meme, the more likely it is to fail."
+    },
+    {
+      "number": 16,
+      "text": "A spectacular failure can become a success as a meme."
+    },
+    {
+      "number": 17,
+      "text": "Every online win eventually gets replaced by the next thing."
+    },
+    {
+      "number": 18,
+      "text": "Anything that can be labeled can become a target of dislike."
+    },
+    {
+      "number": 19,
+      "text": "The more attention a hated thing receives, the stronger its visibility can become."
+    },
+    {
+      "number": 20,
+      "text": "Internet culture often refuses to take itself completely seriously."
+    },
+    {
+      "number": 21,
+      "text": "Original content stops feeling original as soon as it is copied."
+    },
+    {
+      "number": 22,
+      "text": "Copypasta exists to reproduce text until authorship becomes blurry."
+    },
+    {
+      "number": 23,
+      "text": "Copypasta can itself become a new form of originality."
+    },
+    {
+      "number": 24,
+      "text": "Reposting is one of the internet's oldest forms of distribution."
+    },
+    {
+      "number": 25,
+      "text": "Every post can become someone else's context-free screenshot."
+    },
+    {
+      "number": 26,
+      "text": "Every topic has someone willing to argue about it."
+    },
+    {
+      "number": 27,
+      "text": "More users usually means more contradictory opinions."
+    },
+    {
+      "number": 28,
+      "text": "Old imageboard folklore claimed there were no girls on the internet; this was a joke, not reality."
+    },
+    {
+      "number": 29,
+      "text": "On the old anonymous web, identity claims were often treated skeptically."
+    },
+    {
+      "number": 30,
+      "text": "Pictures and evidence became a running joke whenever someone made an extraordinary identity claim."
+    },
+    {
+      "number": 31,
+      "text": "Attractive people are online too; the old rules were intentionally absurd about this."
+    },
+    {
+      "number": 32,
+      "text": "The internet can turn ordinary people into temporary celebrities."
+    },
+    {
+      "number": 33,
+      "text": "Lurking before posting is classic community advice."
+    },
+    {
+      "number": 34,
+      "text": "If it exists, adult fan content of it probably exists somewhere. This is the famous Rule 34 meme."
+    },
+    {
+      "number": 35,
+      "text": "If Rule 34 content does not exist yet, internet folklore jokes that it eventually will."
+    },
+    {
+      "number": 36,
+      "text": "Anonymous folklore says grudges can last much longer online than expected."
+    },
+    {
+      "number": 37,
+      "text": "Old rules about gender on the internet were jokes from anonymous-board culture, not factual statements."
+    },
+    {
+      "number": 38,
+      "text": "Cats are always acceptable internet content."
+    },
+    {
+      "number": 39,
+      "text": "One cat post tends to lead to another."
+    },
+    {
+      "number": 40,
+      "text": "Cat memes multiply faster than anyone expects."
+    },
+    {
+      "number": 41,
+      "text": "Almost anything can become somebody's niche interest or fetish."
+    },
+    {
+      "number": 42,
+      "text": "Cake is often a joke, reference, reward, or lie depending on the fandom."
+    },
+    {
+      "number": 43,
+      "text": "A suspiciously perfect offer may be a trap."
+    },
+    {
+      "number": 44,
+      "text": "Every community eventually complains that the community is worse today."
+    },
+    {
+      "number": 45,
+      "text": "Crude jokes spread quickly in anonymous spaces."
+    },
+    {
+      "number": 46,
+      "text": "A favorite discontinued thing will be requested forever."
+    },
+    {
+      "number": 47,
+      "text": "Self-deprecating jokes are a permanent part of internet culture."
+    },
+    {
+      "number": 48,
+      "text": "When nobody knows what comes next, somebody will post question marks."
+    },
+    {
+      "number": 49,
+      "text": "After the confusion, someone will claim profit."
+    },
+    {
+      "number": 50,
+      "text": "Do not divide by zero in ordinary arithmetic."
+    },
+    {
+      "number": 51,
+      "text": "The internet contains more information than any one user can finish reading."
+    },
+    {
+      "number": 52,
+      "text": "Every fact online should be checked against better evidence when it matters."
+    },
+    {
+      "number": 53,
+      "text": "A screenshot is evidence of a screen, not automatically evidence that the claim is true."
+    },
+    {
+      "number": 54,
+      "text": "A viral claim can spread faster than its correction."
+    },
+    {
+      "number": 55,
+      "text": "Someone has probably asked your question before."
+    },
+    {
+      "number": 56,
+      "text": "Search before repeating a common question when an archive exists."
+    },
+    {
+      "number": 57,
+      "text": "Every fandom develops its own vocabulary."
+    },
+    {
+      "number": 58,
+      "text": "Every large fandom eventually develops internal drama."
+    },
+    {
+      "number": 59,
+      "text": "Every platform produces its own style of humor."
+    },
+    {
+      "number": 60,
+      "text": "Every platform eventually complains that another platform ruined the internet."
+    },
+    {
+      "number": 61,
+      "text": "Nothing posted publicly should be assumed to remain unseen."
+    },
+    {
+      "number": 62,
+      "text": "Deleted posts may survive in screenshots, caches, mirrors, or archives."
+    },
+    {
+      "number": 63,
+      "text": "For many fictional characters, the internet creates gender-swapped interpretations. This is commonly called Rule 63."
+    },
+    {
+      "number": 64,
+      "text": "For every popular character, someone will create an alternate-universe version."
+    },
+    {
+      "number": 65,
+      "text": "If a format can be remixed, somebody will remix it."
+    },
+    {
+      "number": 66,
+      "text": "If a song is popular, somebody will make a cover, remix, mashup, or parody."
+    },
+    {
+      "number": 67,
+      "text": "If an image is recognizable, somebody will turn it into a reaction image."
+    },
+    {
+      "number": 68,
+      "text": "If a phrase is repeatable, somebody will turn it into copypasta."
+    },
+    {
+      "number": 69,
+      "text": "Numbers themselves can become memes when a community repeats them enough."
+    },
+    {
+      "number": 70,
+      "text": "Someone will misunderstand an obvious joke."
+    },
+    {
+      "number": 71,
+      "text": "Someone will take an obvious joke seriously."
+    },
+    {
+      "number": 72,
+      "text": "Someone will respond to a serious post with a joke."
+    },
+    {
+      "number": 73,
+      "text": "Extraordinary claims attract both believers and skeptics."
+    },
+    {
+      "number": 74,
+      "text": "If a mystery remains unsolved, the internet will invent theories about it."
+    },
+    {
+      "number": 75,
+      "text": "Every theory eventually gets a counter-theory."
+    },
+    {
+      "number": 76,
+      "text": "If a file can be copied, copies will appear in unexpected places."
+    },
+    {
+      "number": 77,
+      "text": "If a website disappears, someone may have archived part of it."
+    },
+    {
+      "number": 78,
+      "text": "Broken links are part of web archaeology."
+    },
+    {
+      "number": 79,
+      "text": "Old websites eventually become historical artifacts."
+    },
+    {
+      "number": 80,
+      "text": "A typo can become the entire focus of a discussion."
+    },
+    {
+      "number": 81,
+      "text": "A bad translation can become a famous quote."
+    },
+    {
+      "number": 82,
+      "text": "A bug can become a feature if enough people enjoy it."
+    },
+    {
+      "number": 83,
+      "text": "An obscure reference can become mainstream without warning."
+    },
+    {
+      "number": 84,
+      "text": "The internet is serious business only when somebody insists that it is."
+    },
+    {
+      "number": 85,
+      "text": "If it exists, somebody has probably made fan art of it."
+    },
+    {
+      "number": 86,
+      "text": "If it exists, somebody has probably made a pony version of it."
+    },
+    {
+      "number": 87,
+      "text": "If it exists, somebody has probably made a furry interpretation of it."
+    },
+    {
+      "number": 88,
+      "text": "If software can be modified, somebody will try to mod it."
+    },
+    {
+      "number": 89,
+      "text": "If hardware has a screen, somebody will try to run something unexpected on it."
+    },
+    {
+      "number": 90,
+      "text": "If a device computes, somebody will benchmark it."
+    },
+    {
+      "number": 91,
+      "text": "If an idea becomes popular, clones and variations appear quickly."
+    },
+    {
+      "number": 92,
+      "text": "For every strong opinion, an equally strong opposing opinion can usually be found."
+    },
+    {
+      "number": 93,
+      "text": "If it has a processor or display, somebody will try to run DOOM on it. This is a long-running hacker meme."
+    },
+    {
+      "number": 94,
+      "text": "Any public identity can be impersonated, so verify important claims independently."
+    },
+    {
+      "number": 95,
+      "text": "Somebody will be offended by almost any sufficiently widespread post."
+    },
+    {
+      "number": 96,
+      "text": "Somebody will dislike any sufficiently popular thing."
+    },
+    {
+      "number": 97,
+      "text": "For every joke, someone will miss the joke entirely."
+    },
+    {
+      "number": 98,
+      "text": "If a display or medium can reproduce frames, somebody will try to play Bad Apple!! on it."
+    },
+    {
+      "number": 99,
+      "text": "Memes that look permanent can vanish, while forgotten memes can return years later."
+    },
+    {
+      "number": 100,
+      "text": "There is no final rulebook for the internet; every list is itself part of internet folklore."
+    }
+  ]
+}

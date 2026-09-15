@@ -1,15 +1,21 @@
 {
   "name": "website-of-babel",
-  "version": "14.0.0",
+  "version": "18.0.0",
   "private": true,
-  "description": "Website Of Babel: universal search, media, knowledge, graphs, tools, browser, games, and archives in a Vercel Hobby-compatible single-function API.",
+  "description": "Website Of Babel: universal search, media, knowledge, graphs, tools, Scramjet, occult, cultivation, manipulation and influence literacy, games, archives, and Internet culture for Vercel.",
   "scripts": {
     "dev": "vercel dev",
-    "check": "node --check public/app.js && node --check public/universe.js && node --check public/infinite-engine.js && node --check public/v7.js && node --check public/v8.js && node --check public/v9.js && node --check public/v10.js && node --check public/v11.js && node --check public/v12.js && node --check public/v13.js && node --check api/babel.js && node --check lib/endpoints/browser-config.js && node --check lib/endpoints/catalog.js && node --check lib/endpoints/country.js && node --check lib/endpoints/dossier.js && node --check lib/endpoints/explore.js && node --check lib/endpoints/media-search.js && node --check lib/endpoints/reader.js && node --check lib/endpoints/recipes.js && node --check lib/endpoints/research.js && node --check lib/endpoints/stats.js && node --check lib/endpoints/topic.js && node --check lib/endpoints/trends.js && node --check lib/endpoints/webgraph.js && node --check lib/endpoints/websearch.js && node --check lib/knowledge.js && node --check lib/store.js && node -e \"const k=require('./lib/knowledge'); const s=k.seedTopics(); if(s.length<250) process.exit(1); console.log('seed topics',s.length)\" && node -e \"const fs=require('fs'); const files=fs.readdirSync('api').filter(f=>f.endsWith('.js')); if(files.length>12){console.error('Too many Vercel functions:',files.length);process.exit(1)} console.log('Vercel functions',files.length,files)\" && node scripts/verify-data.js",
-    "verify:data": "node scripts/verify-data.js"
+    "check": "node --check public/app.js && node --check public/universe.js && node --check public/infinite-engine.js && node --check public/v7.js && node --check public/v8.js && node --check public/v9.js && node --check public/v10.js && node --check public/v11.js && node --check public/v12.js && node --check public/v13.js && node --check public/v16.js && node --check public/v17.js && node --check public/v18.js && node --check scripts/prepare-scramjet.js && node --check api/babel.js && node --check lib/endpoints/browser-config.js && node --check lib/endpoints/catalog.js && node --check lib/endpoints/country.js && node --check lib/endpoints/dossier.js && node --check lib/endpoints/explore.js && node --check lib/endpoints/media-search.js && node --check lib/endpoints/reader.js && node --check lib/endpoints/recipes.js && node --check lib/endpoints/research.js && node --check lib/endpoints/stats.js && node --check lib/endpoints/topic.js && node --check lib/endpoints/trends.js && node --check lib/endpoints/webgraph.js && node --check lib/endpoints/websearch.js && node --check data/influence-seed.js && node --check lib/knowledge.js && node --check lib/store.js && node -e \"const k=require('./lib/knowledge'); const s=k.seedTopics(); if(s.length<250) process.exit(1); console.log('seed topics',s.length)\" && node -e \"const fs=require('fs'); const files=fs.readdirSync('api').filter(f=>f.endsWith('.js')); if(files.length>12){console.error('Too many Vercel functions:',files.length);process.exit(1)} console.log('Vercel functions',files.length,files)\" && node scripts/verify-data.js && node -e \"const r=require('./public/data/internet-rules.json'); if(r.rules.length!==100) process.exit(1); console.log('internet rules',r.rules.length)\"",
+    "verify:data": "node scripts/verify-data.js",
+    "build": "node scripts/prepare-scramjet.js"
   },
   "engines": {
     "node": ">=22"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@mercuryworkshop/scramjet": "1.1.0",
+    "@mercuryworkshop/bare-mux": "2.1.9",
+    "@mercuryworkshop/libcurl-transport": "1.5.2"
+  }
 }

@@ -256,8 +256,22 @@
       "destination": "/index.html"
     },
     {
+      "source": "/occult",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cultivation",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/influence",
+      "destination": "/index.html"
+    },
+    {
       "source": "/",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "public"
 }
