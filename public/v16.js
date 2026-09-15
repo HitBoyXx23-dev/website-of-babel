@@ -62,20 +62,35 @@ v13Bind=function(root=document){v16BaseBind(root);v16HydrateSources(root)};
 
 async function v16RulesPage(){
   setTitle('100 Rules of the Internet');app.innerHTML=`<div class="v13-wrap v13-page"><header class="v16-page-head"><span>INTERNET CULTURE ARCHIVE</span><h1>100 Rules of the Internet</h1><p>The numbered meme never had one permanent canonical edition. Babel preserves a complete 1–100 searchable archive edition with the famous recurring rules and historical context.</p></header><div class="v16-rule-tools"><input id="v16RuleFind" placeholder="Search all 100 rules"><span id="v16RuleCount">100 / 100</span></div><div class="v16-rules" id="v16Rules"><div class="v13-loading">Loading the archive…</div></div></div>`;
-  try{const d=await fetch('/data/internet-rules.json').then(r=>r.json());const host=document.querySelector('#v16Rules');host.innerHTML=`<div class="v16-rule-note">${esc(d.note||'')}</div>`+d.rules.map(r=>`<article data-rule-text="${esc(r.text.toLowerCase())}"><b>${String(r.number).padStart(3,'0')}</b><p>${esc(r.text)}</p><button data-v16-q="Rule ${r.number} internet ${esc(r.text.slice(0,80))}">Research</button></article>`).join('');const input=document.querySelector('#v16RuleFind'),count=document.querySelector('#v16RuleCount');input.oninput=()=>{const q=input.value.trim().toLowerCase();let n=0;host.querySelectorAll('article').forEach(a=>{const hit=!q||a.dataset.ruleText.includes(q)||a.querySelector('b').textContent.includes(q);a.hidden=!hit;if(hit)n++});count.textContent=`${n} / 100`};host.querySelectorAll('[data-v16-q]').forEach(b=>b.onclick=()=>route(v9SearchRoute(b.dataset.v16Q)))}catch(e){document.querySelector('#v16Rules').innerHTML=`<div class="v13-error">${esc(e.message)}</div>`}
+  try{let d=window.BABEL_INTERNET_RULES;try{const r=await fetch('/data/internet-rules.json',{cache:'no-store'});if(r.ok)d=await r.json()}catch{}if(!d||!Array.isArray(d.rules)||d.rules.length!==100)throw new Error('Rules archive unavailable');const host=document.querySelector('#v16Rules');host.innerHTML=`<div class="v16-rule-note">${esc(d.note||'')}</div>`+d.rules.map(r=>`<article data-rule-text="${esc(r.text.toLowerCase())}"><b>${String(r.number).padStart(3,'0')}</b><p>${esc(r.text)}</p><button data-v16-q="Rule ${r.number} internet ${esc(r.text.slice(0,80))}">Research</button></article>`).join('');const input=document.querySelector('#v16RuleFind'),count=document.querySelector('#v16RuleCount');input.oninput=()=>{const q=input.value.trim().toLowerCase();let n=0;host.querySelectorAll('article').forEach(a=>{const hit=!q||a.dataset.ruleText.includes(q)||a.querySelector('b').textContent.includes(q);a.hidden=!hit;if(hit)n++});count.textContent=`${n} / 100`};host.querySelectorAll('[data-v16-q]').forEach(b=>b.onclick=()=>route(v9SearchRoute(b.dataset.v16Q)))}catch(e){document.querySelector('#v16Rules').innerHTML=`<div class="v13-error">${esc(e.message)}</div>`}
 }
 
 let v16Scramjet=null,v16Bare=null,v16ScramjetAssets=null;
 function v16LoadScript(src){return new Promise((resolve,reject)=>{const found=document.querySelector(`script[data-v16-src="${src}"]`);if(found){if(found.dataset.ready==='1')return resolve();found.addEventListener('load',resolve,{once:true});found.addEventListener('error',reject,{once:true});return}const s=document.createElement('script');s.src=src;s.dataset.v16Src=src;s.onload=()=>{s.dataset.ready='1';resolve()};s.onerror=()=>reject(new Error(`Could not load ${src}`));document.head.appendChild(s)})}
-async function v16InitScramjet(cfg,host){
-  if(v16Scramjet)return v16Scramjet;
+async function v16ResetScramjetState(){
+  v16Scramjet=null;v16Bare=null;
+  try{for(const reg of await navigator.serviceWorker.getRegistrations()){const u=(reg.active&&reg.active.scriptURL)||(reg.waiting&&reg.waiting.scriptURL)||'';if(/\/scramjet-sw\.js(?:$|\?)/.test(u))await reg.unregister()}}catch{}
+  try{if(indexedDB.databases){for(const db of await indexedDB.databases()){const name=db&&db.name||'';if(/scramjet|bare.?mux/i.test(name))await new Promise(resolve=>{const r=indexedDB.deleteDatabase(name);r.onsuccess=r.onerror=r.onblocked=()=>resolve()})}}}catch{}
+}
+async function v16StartScramjet(cfg){
   await v16LoadScript('/baremux/index.js');await v16LoadScript('/scramjet/scramjet.all.js');
   if(!('serviceWorker'in navigator))throw new Error('This browser does not support service workers.');
-  await navigator.serviceWorker.register(cfg.serviceWorker||'/scramjet-sw.js',{scope:'/'});await navigator.serviceWorker.ready;
+  const reg=await navigator.serviceWorker.register(cfg.serviceWorker||'/scramjet-sw.js',{scope:'/'});
+  await navigator.serviceWorker.ready;
   v16Bare=new BareMux.BareMuxConnection('/baremux/worker.js');
   await v16Bare.setTransport('/libcurl/index.mjs',[{wisp:cfg.wispUrl}]);
-  const {ScramjetController}=$scramjetLoadController();v16Scramjet=new ScramjetController({prefix:cfg.prefix||'/service/',files:{wasm:'/scramjet/scramjet.wasm.wasm',all:'/scramjet/scramjet.all.js',sync:'/scramjet/scramjet.sync.js'}});await v16Scramjet.init();
+  const {ScramjetController}=$scramjetLoadController();
+  v16Scramjet=new ScramjetController({prefix:cfg.prefix||'/service/',files:{wasm:'/scramjet/scramjet.wasm.wasm',all:'/scramjet/scramjet.all.js',sync:'/scramjet/scramjet.sync.js'}});
+  await v16Scramjet.init();
   return v16Scramjet;
+}
+async function v16InitScramjet(cfg,host){
+  if(v16Scramjet)return v16Scramjet;
+  try{return await v16StartScramjet(cfg)}catch(err){
+    const msg=String(err&&err.message||err);
+    if(/object store|indexeddb|notfounderror|bare-mux|sharedworker/i.test(msg)){await v16ResetScramjetState();return await v16StartScramjet(cfg)}
+    throw err;
+  }
 }
 async function v16BrowserPage(){
   setTitle('Browser');let cfg={integratedScramjet:true,wispUrl:'wss://wisp.mercurywork.shop/',scramjetUrl:''};try{cfg=await json('/api/browser-config')}catch{}

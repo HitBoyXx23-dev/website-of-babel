@@ -50,6 +50,23 @@
 </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/rules-data.js" defer></script>
+<script>
+(function(){
+  if(!('serviceWorker' in navigator) || location.pathname==='/browser') return;
+  navigator.serviceWorker.getRegistrations().then(async regs=>{
+    let removed=false;
+    for(const reg of regs){
+      const u=(reg.active&&reg.active.scriptURL)||(reg.waiting&&reg.waiting.scriptURL)||(reg.installing&&reg.installing.scriptURL)||'';
+      if(/\/scramjet-sw\.js(?:$|\?)/.test(u)){ await reg.unregister(); removed=true; }
+    }
+    if(removed && navigator.serviceWorker.controller && !sessionStorage.getItem('babel.scramjet.recovered')){
+      sessionStorage.setItem('babel.scramjet.recovered','1');
+      location.reload();
+    }
+  }).catch(()=>{});
+})();
+</script>
 <script src="/app.js" defer></script>
 <script src="/universe.js" defer></script>
 <script src="/infinite-engine.js" defer></script>

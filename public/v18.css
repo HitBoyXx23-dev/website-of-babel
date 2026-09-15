@@ -1,2 +1,11 @@
 /* v18 influence atlas. Uses the existing boxy black and white visual system. */
 .v18-rule{display:grid;grid-template-columns:180px 1fr;border:2px solid var(--ink,#111);margin-top:22px}.v18-rule>*{padding:16px;margin:0}.v18-rule b{font:800 12px ui-monospace,monospace;letter-spacing:.1em;border-right:1px solid var(--ink,#111)}.v18-rule p{font-size:15px;line-height:1.6}.v18-map{display:grid;grid-template-columns:repeat(3,1fr);border-left:1px solid var(--ink,#111);border-top:1px solid var(--ink,#111)}.v18-map button{appearance:none;background:transparent;color:inherit;text-align:left;border:0;border-right:1px solid var(--ink,#111);border-bottom:1px solid var(--ink,#111);padding:20px;min-height:130px;cursor:pointer}.v18-map button:hover{background:var(--ink,#111);color:var(--paper,#fff)}.v18-map b{display:block;font:800 20px/1 Arial,sans-serif;margin-bottom:8px}.v18-map span{font-size:13px;line-height:1.5}@media(max-width:850px){.v18-map{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.v18-rule{grid-template-columns:1fr}.v18-rule b{border-right:0;border-bottom:1px solid var(--ink,#111)}.v18-map{grid-template-columns:1fr}}
+
+/* v18 logo fix: remove legacy v9 trailing slash pseudo-element from brand mark */
+.brand-mark::after,
+.brand-mark:after,
+.brand-name::after,
+.brand-name:after{
+  content:none !important;
+  display:none !important;
+}

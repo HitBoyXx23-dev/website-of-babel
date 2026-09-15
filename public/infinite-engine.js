@@ -56,14 +56,16 @@ library=function(){
 };
 
 // Network: keep the sourced/stored graph, then expose an unbounded procedural frontier.
-const infinityBaseNetwork=network;
-network=async function(){
-  await infinityBaseNetwork();
-  const page=app.querySelector('.page');if(!page)return;
-  page.insertAdjacentHTML('beforeend',`<section class="frontier-section"><div class="section-row"><div><div class="kicker">PROCEDURAL FRONTIER</div><h2>Expand beyond the stored graph.</h2></div><p>Every positive integer is a frontier node. Children are <code>2n</code> and <code>2n+1</code>, so expansion has no terminal depth.</p></div><div class="frontier-control"><input id="frontierJump" inputmode="numeric" value="1" placeholder="Node coordinate"><button id="frontierGo">Open coordinate</button></div><div id="frontierTree" class="frontier-tree"></div></section>`);
-  const drawFrontier=(root)=>{root=posBig(root,1n);const topics=allTopics();const rows=[];let level=[root];for(let depth=0;depth<4;depth++){rows.push(level);level=level.flatMap(n=>[n*2n,n*2n+1n])}document.querySelector('#frontierTree').innerHTML=rows.map((row,d)=>`<div class="frontier-row" data-depth="${d}">${row.map(n=>{const t=topics[bmod(n,Math.max(1,topics.length))]||{title:'Unknown',slug:'unknown',category:'Index'};return `<button class="frontier-node" data-frontier="${n}" title="${esc(infinityCoordinate('network',n))}"><span>∞:${n}</span><strong>${esc(t.title)}</strong><small>${esc(t.category||'Index')}</small></button>`}).join('')}</div>`).join('');document.querySelectorAll('[data-frontier]').forEach(b=>b.onclick=()=>{document.querySelector('#frontierJump').value=b.dataset.frontier;drawFrontier(bigOr(b.dataset.frontier,1n))})};
-  document.querySelector('#frontierGo').onclick=()=>drawFrontier(document.querySelector('#frontierJump').value);drawFrontier(1n);
-};
+if(typeof globalThis.network==='function'){
+  const infinityBaseNetwork=globalThis.network;
+  globalThis.network=async function(){
+    await infinityBaseNetwork();
+    const page=app.querySelector('.page');if(!page)return;
+    page.insertAdjacentHTML('beforeend',`<section class="frontier-section"><div class="section-row"><div><div class="kicker">PROCEDURAL FRONTIER</div><h2>Expand beyond the stored graph.</h2></div><p>Every positive integer is a frontier node. Children are <code>2n</code> and <code>2n+1</code>, so expansion has no terminal depth.</p></div><div class="frontier-control"><input id="frontierJump" inputmode="numeric" value="1" placeholder="Node coordinate"><button id="frontierGo">Open coordinate</button></div><div id="frontierTree" class="frontier-tree"></div></section>`);
+    const drawFrontier=(root)=>{root=posBig(root,1n);const topics=allTopics();const rows=[];let level=[root];for(let depth=0;depth<4;depth++){rows.push(level);level=level.flatMap(n=>[n*2n,n*2n+1n])}document.querySelector('#frontierTree').innerHTML=rows.map((row,d)=>`<div class="frontier-row" data-depth="${d}">${row.map(n=>{const t=topics[bmod(n,Math.max(1,topics.length))]||{title:'Unknown',slug:'unknown',category:'Index'};return `<button class="frontier-node" data-frontier="${n}" title="${esc(infinityCoordinate('network',n))}"><span>∞:${n}</span><strong>${esc(t.title)}</strong><small>${esc(t.category||'Index')}</small></button>`}).join('')}</div>`).join('');document.querySelectorAll('[data-frontier]').forEach(b=>b.onclick=()=>{document.querySelector('#frontierJump').value=b.dataset.frontier;drawFrontier(bigOr(b.dataset.frontier,1n))})};
+    document.querySelector('#frontierGo').onclick=()=>drawFrontier(document.querySelector('#frontierJump').value);drawFrontier(1n);
+  };
+}
 
 // Numbers: add truly unbounded BigInt enumerations for integers and positive rationals.
 function integerAtIndex(i){i=bigOr(i,0n);if(i<0n)i=-i;return i===0n?0n:(i%2n?((i+1n)/2n):-(i/2n))}
