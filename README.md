@@ -1,25 +1,41 @@
 # Website Of Babel
 
-Website Of Babel is an open-source universal research, learning, media, browsing, tools, and exploration website built for GitHub and Vercel.
+Open-source universal research, media, knowledge, graph, tools, games, Library of Babel, Pi, Numbers, cultures, occult/cultivation/influence archives, and a built-in Babel Browser.
 
-## Run
+## Deploy to Vercel
+
+1. Push the repository to GitHub.
+2. Import it into Vercel.
+3. Framework preset: **Other**.
+4. Install command: `npm install`.
+5. Build command: `npm run build`.
+6. Output directory: `public`.
+
+The project uses one Vercel function (`api/babel.js`) so it stays within the Hobby function-count limit.
+
+## Scramjet Browser
+
+The Browser uses Scramjet **2.0.67-alpha.2**, not the deprecated 1.x/BareMux stack. Build-time assets are copied into `public/` from:
+
+- `@mercuryworkshop/scramjet`
+- `@mercuryworkshop/scramjet-controller`
+- `@mercuryworkshop/scramjet-utils`
+- `@mercuryworkshop/libcurl-transport`
+
+Set an optional relay override in Vercel:
+
+```env
+SCRAMJET_WISP_URL=wss://your-wisp-relay.example/wisp/
+```
+
+Vercel serverless cannot host a persistent Wisp WebSocket itself, so Scramjet uses the configured external Wisp relay. Babel Reader remains available when a proxy site or relay is unavailable.
+
+## Development
 
 ```bash
 npm install
 npm run build
 npm run check
-npx vercel dev
 ```
 
-## Vercel
-
-Use the **Other** framework preset.
-
-- Install: `npm install`
-- Build: `npm run build`
-- Output: `public`
-- Serverless functions: 1
-
-The site includes universal search, Babel Dossiers, Network of Babel, Library, Pi and Numbers, media, Reader, Scramjet Browser, calculator/tools, programming, food, languages, world knowledge, occult and witchcraft, agriculture and qi cultivation, manipulation and influence literacy, games, archives, and Internet culture.
-
-Searches do not permanently publish visitor input. Personal notes remain on that visitor's device.
+The Browser automatically removes the old v1 `scramjet-sw.js` registration when upgrading from earlier Website Of Babel releases.

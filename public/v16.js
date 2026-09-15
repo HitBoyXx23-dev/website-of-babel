@@ -65,40 +65,106 @@ async function v16RulesPage(){
   try{let d=window.BABEL_INTERNET_RULES;try{const r=await fetch('/data/internet-rules.json',{cache:'no-store'});if(r.ok)d=await r.json()}catch{}if(!d||!Array.isArray(d.rules)||d.rules.length!==100)throw new Error('Rules archive unavailable');const host=document.querySelector('#v16Rules');host.innerHTML=`<div class="v16-rule-note">${esc(d.note||'')}</div>`+d.rules.map(r=>`<article data-rule-text="${esc(r.text.toLowerCase())}"><b>${String(r.number).padStart(3,'0')}</b><p>${esc(r.text)}</p><button data-v16-q="Rule ${r.number} internet ${esc(r.text.slice(0,80))}">Research</button></article>`).join('');const input=document.querySelector('#v16RuleFind'),count=document.querySelector('#v16RuleCount');input.oninput=()=>{const q=input.value.trim().toLowerCase();let n=0;host.querySelectorAll('article').forEach(a=>{const hit=!q||a.dataset.ruleText.includes(q)||a.querySelector('b').textContent.includes(q);a.hidden=!hit;if(hit)n++});count.textContent=`${n} / 100`};host.querySelectorAll('[data-v16-q]').forEach(b=>b.onclick=()=>route(v9SearchRoute(b.dataset.v16Q)))}catch(e){document.querySelector('#v16Rules').innerHTML=`<div class="v13-error">${esc(e.message)}</div>`}
 }
 
-let v16Scramjet=null,v16Bare=null,v16ScramjetAssets=null;
-function v16LoadScript(src){return new Promise((resolve,reject)=>{const found=document.querySelector(`script[data-v16-src="${src}"]`);if(found){if(found.dataset.ready==='1')return resolve();found.addEventListener('load',resolve,{once:true});found.addEventListener('error',reject,{once:true});return}const s=document.createElement('script');s.src=src;s.dataset.v16Src=src;s.onload=()=>{s.dataset.ready='1';resolve()};s.onerror=()=>reject(new Error(`Could not load ${src}`));document.head.appendChild(s)})}
-async function v16ResetScramjetState(){
-  v16Scramjet=null;v16Bare=null;
-  try{for(const reg of await navigator.serviceWorker.getRegistrations()){const u=(reg.active&&reg.active.scriptURL)||(reg.waiting&&reg.waiting.scriptURL)||'';if(/\/scramjet-sw\.js(?:$|\?)/.test(u))await reg.unregister()}}catch{}
-  try{if(indexedDB.databases){for(const db of await indexedDB.databases()){const name=db&&db.name||'';if(/scramjet|bare.?mux/i.test(name))await new Promise(resolve=>{const r=indexedDB.deleteDatabase(name);r.onsuccess=r.onerror=r.onblocked=()=>resolve()})}}}catch{}
+let v16Scramjet=null,v16ScramjetFrame=null;
+function v16LoadScript(src){return new Promise((resolve,reject)=>{const found=document.querySelector(`script[data-v16-src="${src}"]`);if(found){if(found.dataset.ready==='1')return resolve();found.addEventListener('load',resolve,{once:true});found.addEventListener('error',reject,{once:true});return}const x=document.createElement('script');x.src=src;x.dataset.v16Src=src;x.onload=()=>{x.dataset.ready='1';resolve()};x.onerror=()=>reject(new Error(`Could not load ${src}`));document.head.appendChild(x)})}
+async function v16DeleteDb(name){return new Promise(resolve=>{try{const r=indexedDB.deleteDatabase(name);r.onsuccess=r.onerror=r.onblocked=()=>resolve()}catch{resolve()}})}
+async function v16MigrateLegacyScramjet(){
+  if(sessionStorage.getItem('babel.scramjet.v2.migrated')==='1')return false;
+  let controlledByV1=false;
+  try{
+    const current=navigator.serviceWorker.controller?.scriptURL||'';
+    controlledByV1=/\/scramjet-sw\.js(?:$|\?)/.test(current);
+    for(const reg of await navigator.serviceWorker.getRegistrations()){
+      const urls=[reg.active?.scriptURL,reg.waiting?.scriptURL,reg.installing?.scriptURL].filter(Boolean).join(' ');
+      if(/\/scramjet-sw\.js(?:$|\?)/.test(urls))await reg.unregister();
+    }
+  }catch{}
+  try{
+    if(indexedDB.databases){
+      for(const db of await indexedDB.databases()){
+        const name=db?.name||'';
+        if(/bare.?mux|scramjet/i.test(name))await v16DeleteDb(name);
+      }
+    }
+  }catch{}
+  sessionStorage.setItem('babel.scramjet.v2.migrated','1');
+  return controlledByV1;
+}
+async function v16WaitForServiceWorker(reg,timeout=10000){
+  if(navigator.serviceWorker.controller)return navigator.serviceWorker.controller;
+  await Promise.race([
+    navigator.serviceWorker.ready.catch(()=>null),
+    new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true})),
+    new Promise(resolve=>setTimeout(resolve,timeout))
+  ]);
+  return navigator.serviceWorker.controller||reg.active||reg.waiting||null;
 }
 async function v16StartScramjet(cfg){
-  await v16LoadScript('/baremux/index.js');await v16LoadScript('/scramjet/scramjet.all.js');
   if(!('serviceWorker'in navigator))throw new Error('This browser does not support service workers.');
-  const reg=await navigator.serviceWorker.register(cfg.serviceWorker||'/scramjet-sw.js',{scope:'/'});
-  await navigator.serviceWorker.ready;
-  v16Bare=new BareMux.BareMuxConnection('/baremux/worker.js');
-  await v16Bare.setTransport('/libcurl/index.mjs',[{wisp:cfg.wispUrl}]);
-  const {ScramjetController}=$scramjetLoadController();
-  v16Scramjet=new ScramjetController({prefix:cfg.prefix||'/service/',files:{wasm:'/scramjet/scramjet.wasm.wasm',all:'/scramjet/scramjet.all.js',sync:'/scramjet/scramjet.sync.js'}});
-  await v16Scramjet.init();
+  if(await v16MigrateLegacyScramjet()){
+    sessionStorage.setItem('babel.scramjet.v2.pending','1');
+    location.reload();
+    throw new Error('Migrating Scramjet v1 browser state to v2. Reloading once…');
+  }
+  await v16LoadScript(cfg.controllerApi||'/controller/controller.api.js');
+  // Utils are optional for the frame, but loading them makes the v2 plugin set available.
+  try{await v16LoadScript(cfg.utilsScript||'/utils/scramjet-utils.js')}catch{}
+  const mod=await import(cfg.libcurlModule||'/libcurl/index.mjs');
+  const LibcurlClient=mod.default||mod.LibcurlClient;
+  if(!LibcurlClient)throw new Error('Scramjet v2 libcurl transport did not export LibcurlClient.');
+  const Controller=globalThis.api?.Controller||globalThis.$scramjetController?.Controller||globalThis.scramjetController?.Controller;
+  if(!Controller)throw new Error('Scramjet v2 controller API did not load.');
+  const reg=await navigator.serviceWorker.register(cfg.serviceWorker||'/scramjet-v2-sw.js',{scope:'/',updateViaCache:'none'});
+  try{await reg.update()}catch{}
+  const sw=await v16WaitForServiceWorker(reg);
+  if(!sw)throw new Error('Scramjet v2 service worker did not activate.');
+  const transport=new LibcurlClient({wisp:cfg.wispUrl,websocket:cfg.wispUrl});
+  v16Scramjet=new Controller({
+    serviceworker:sw,
+    transport,
+    config:{
+      scramjetPath:cfg.scramjetPath||'/scram/scramjet.js',
+      wasmPath:cfg.wasmPath||'/scram/scramjet.wasm',
+      injectPath:cfg.injectPath||'/controller/controller.inject.js'
+    }
+  });
+  await v16Scramjet.wait();
   return v16Scramjet;
 }
-async function v16InitScramjet(cfg,host){
-  if(v16Scramjet)return v16Scramjet;
-  try{return await v16StartScramjet(cfg)}catch(err){
-    const msg=String(err&&err.message||err);
-    if(/object store|indexeddb|notfounderror|bare-mux|sharedworker/i.test(msg)){await v16ResetScramjetState();return await v16StartScramjet(cfg)}
-    throw err;
-  }
-}
+async function v16InitScramjet(cfg){return v16Scramjet||v16StartScramjet(cfg)}
 async function v16BrowserPage(){
-  setTitle('Browser');let cfg={integratedScramjet:true,wispUrl:'wss://wisp.mercurywork.shop/',scramjetUrl:''};try{cfg=await json('/api/browser-config')}catch{}
-  app.innerHTML=`<div class="v13-wrap v13-page"><header class="v16-page-head"><span>BABEL BROWSER</span><h1>Reader + Scramjet</h1><p>Reader extracts knowledge and media into Babel. Scramjet opens compatible public websites inside a proxied browser frame. The Vercel app serves Scramjet itself; network transport uses the configured Wisp relay.</p></header><section class="v16-browser"><div class="v16-browser-bar"><button id="v16Back">←</button><button id="v16Forward">→</button><form id="v16BrowserForm"><input id="v16BrowserURL" placeholder="URL or search phrase"><button>Go</button></form><select id="v16BrowserMode"><option value="reader">Babel Reader</option><option value="scramjet">Scramjet</option></select></div><div class="v16-browser-status" id="v16BrowserStatus">Ready · Scramjet relay: ${esc(cfg.wispUrl||'not configured')}</div><div class="v16-browser-stage" id="v16BrowserStage"><div class="v16-browser-empty"><b>B</b><span>Enter a public website or search phrase.</span></div></div></section></div>`;
-  const stage=document.querySelector('#v16BrowserStage'),status=document.querySelector('#v16BrowserStatus'),input=document.querySelector('#v16BrowserURL'),mode=document.querySelector('#v16BrowserMode'),hist=[];let hi=-1,frameObj=null;
+  setTitle('Browser');let cfg={integratedScramjet:true,engine:'Scramjet 2',engineVersion:'2.0.67-alpha.2',wispUrl:'wss://wisp.mercurywork.shop/',scramjetUrl:''};try{cfg=await json('/api/browser-config')}catch{}
+  app.innerHTML=`<div class="v13-wrap v13-page"><header class="v16-page-head"><span>BABEL BROWSER</span><h1>Reader + Scramjet 2</h1><p>Reader turns public pages into Babel dossiers. Scramjet 2 opens compatible public websites in an isolated proxy frame using the current controller + transport architecture, without BareMux.</p></header><section class="v16-browser"><div class="v16-browser-bar"><button id="v16Back">←</button><button id="v16Forward">→</button><form id="v16BrowserForm"><input id="v16BrowserURL" placeholder="URL or search phrase"><button>Go</button></form><select id="v16BrowserMode"><option value="reader">Babel Reader</option><option value="scramjet">Scramjet 2</option></select></div><div class="v16-browser-status" id="v16BrowserStatus">Ready · ${esc(cfg.engine||'Scramjet 2')} ${esc(cfg.engineVersion||'')} · relay ${esc(cfg.wispUrl||'not configured')}</div><div class="v16-browser-stage" id="v16BrowserStage"><div class="v16-browser-empty"><b>B</b><span>Enter a public website or search phrase.</span></div></div></section></div>`;
+  const stage=document.querySelector('#v16BrowserStage'),status=document.querySelector('#v16BrowserStatus'),input=document.querySelector('#v16BrowserURL'),mode=document.querySelector('#v16BrowserMode'),hist=[];let hi=-1;
   const normalize=v=>{v=v.trim();if(!v)return'';if(/^https?:\/\//i.test(v))return v;if(/^[\w.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(v))return'https://'+v;return''};
-  async function open(v,push=true){const url=normalize(v);if(!url){route(v9SearchRoute(v));return}input.value=url;if(push){hist.splice(hi+1);hist.push({url,mode:mode.value});hi=hist.length-1}if(mode.value==='reader'){stage.innerHTML=`<iframe class="v16-browser-frame" src="${v9ReaderRoute(url)}" title="Babel Reader"></iframe>`;status.textContent='Babel Reader · normalized internal view';return}status.textContent='Starting Scramjet…';stage.innerHTML='<div class="v16-browser-empty"><b>SJ</b><span>Starting Scramjet transport…</span></div>';try{const sj=await v16InitScramjet(cfg,stage);stage.innerHTML='';frameObj=sj.createFrame();frameObj.frame.className='v16-browser-frame';stage.appendChild(frameObj.frame);await frameObj.go(url);status.textContent=`Scramjet · ${url}`}catch(e){if(cfg.scramjetUrl){const src=cfg.scramjetUrl.includes('{url}')?cfg.scramjetUrl.replace('{url}',encodeURIComponent(url)):cfg.scramjetUrl+(cfg.scramjetUrl.includes('?')?'&':'?')+'url='+encodeURIComponent(url);stage.innerHTML=`<iframe class="v16-browser-frame" src="${esc(src)}" title="Remote Scramjet"></iframe>`;status.textContent='Integrated Scramjet failed; using configured remote endpoint.'}else{stage.innerHTML=`<div class="v16-browser-error"><b>Scramjet could not start.</b><p>${esc(e.message)}</p><p>Run <code>npm install</code> and let Vercel run <code>npm run build</code>. If the relay is unavailable, set <code>SCRAMJET_WISP_URL</code>.</p></div>`;status.textContent='Scramjet unavailable'}}}
-  document.querySelector('#v16BrowserForm').onsubmit=e=>{e.preventDefault();open(input.value)};document.querySelector('#v16Back').onclick=()=>{if(hi>0){hi--;mode.value=hist[hi].mode;open(hist[hi].url,false)}};document.querySelector('#v16Forward').onclick=()=>{if(hi<hist.length-1){hi++;mode.value=hist[hi].mode;open(hist[hi].url,false)}};
+  async function open(v,push=true){
+    const url=normalize(v);if(!url){route(v9SearchRoute(v));return}input.value=url;if(push){hist.splice(hi+1);hist.push({url,mode:mode.value});hi=hist.length-1}
+    if(mode.value==='reader'){stage.innerHTML=`<iframe class="v16-browser-frame" src="${v9ReaderRoute(url)}" title="Babel Reader"></iframe>`;status.textContent='Babel Reader · normalized internal view';return}
+    if(!crossOriginIsolated){
+      sessionStorage.setItem('babel.scramjet.pending.url',url);sessionStorage.setItem('babel.scramjet.pending.mode','scramjet');
+      status.textContent='Reloading Browser with cross-origin isolation for Scramjet 2…';
+      location.assign('/browser?sj=1');return;
+    }
+    status.textContent='Starting Scramjet 2…';stage.innerHTML='<div class="v16-browser-empty"><b>SJ2</b><span>Starting controller + libcurl transport…</span></div>';
+    try{
+      const sj=await v16InitScramjet(cfg);
+      stage.innerHTML='';
+      const iframe=document.createElement('iframe');iframe.className='v16-browser-frame';iframe.title='Scramjet 2';stage.appendChild(iframe);
+      const utils=globalThis.$scramjetUtils||globalThis.utils;const plugins=[];
+      try{if(utils?.HttpCachePlugin)plugins.push(new utils.HttpCachePlugin())}catch{}
+      try{if(utils?.CatchEscapedLinksPlugin)plugins.push(new utils.CatchEscapedLinksPlugin(()=>new URL(location.href)))}catch{}
+      v16ScramjetFrame=sj.createFrame(iframe,{plugins});
+      v16ScramjetFrame.go(url);
+      status.textContent=`Scramjet 2 · ${url}`;
+    }catch(e){
+      if(cfg.scramjetUrl){const src=cfg.scramjetUrl.includes('{url}')?cfg.scramjetUrl.replace('{url}',encodeURIComponent(url)):cfg.scramjetUrl+(cfg.scramjetUrl.includes('?')?'&':'?')+'url='+encodeURIComponent(url);stage.innerHTML=`<iframe class="v16-browser-frame" src="${esc(src)}" title="Remote Scramjet"></iframe>`;status.textContent='Integrated Scramjet 2 failed; using configured remote endpoint.'}
+      else{stage.innerHTML=`<div class="v16-browser-error"><b>Scramjet 2 could not start.</b><p>${esc(e.message||String(e))}</p><p>Redeploy after <code>npm install</code> and <code>npm run build</code>. The browser also needs a working Wisp relay in <code>SCRAMJET_WISP_URL</code>.</p></div>`;status.textContent='Scramjet 2 unavailable'}
+    }
+  }
+  document.querySelector('#v16BrowserForm').onsubmit=e=>{e.preventDefault();open(input.value)};
+  document.querySelector('#v16Back').onclick=()=>{if(hi>0){hi--;mode.value=hist[hi].mode;open(hist[hi].url,false)}};
+  document.querySelector('#v16Forward').onclick=()=>{if(hi<hist.length-1){hi++;mode.value=hist[hi].mode;open(hist[hi].url,false)}};
+  const pending=sessionStorage.getItem('babel.scramjet.pending.url');if(pending){sessionStorage.removeItem('babel.scramjet.pending.url');sessionStorage.removeItem('babel.scramjet.pending.mode');mode.value='scramjet';input.value=pending;setTimeout(()=>open(pending),0)}
 }
 
 const v16BaseRender=renderRoute;
