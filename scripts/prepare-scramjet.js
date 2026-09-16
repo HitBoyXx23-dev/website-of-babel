@@ -25,9 +25,9 @@ try{
   const controllerPath=dirOf('@mercuryworkshop/scramjet-controller');
   const utilsPath=dirOf('@mercuryworkshop/scramjet-utils');
   const libcurlPath=dirOf('@mercuryworkshop/libcurl-transport');
+  const bareTransportPath=dirOf('@mercuryworkshop/bare-transport');
 
-  // Remove v1/BareMux build artifacts if a local build directory is reused.
-  for(const old of ['scramjet','baremux','libcurl','scram','controller','utils']){
+  for(const old of ['scramjet','baremux','libcurl','scram','controller','utils','baremod']){
     fs.rmSync(path.join(out,old),{recursive:true,force:true});
   }
   fs.rmSync(path.join(out,'scramjet-sw.js'),{force:true});
@@ -37,22 +37,38 @@ try{
   copyTree(controllerPath,path.join(out,'controller'));
   copyTree(utilsPath,path.join(out,'utils'));
   copyTree(libcurlPath,path.join(out,'libcurl'));
+  copyTree(bareTransportPath,path.join(out,'baremod'));
 
-  const sw=path.join(out,'controller','controller.sw.js');
-  if(!fs.existsSync(sw))throw new Error('controller.sw.js was not found in @mercuryworkshop/scramjet-controller');
-  fs.copyFileSync(sw,path.join(out,'scramjet-v2-sw.js'));
+  // Scramjet 2's controller.sw.js is a library, not a complete service worker.
+  // The wrapper below is the required routing layer documented by the v2 controller.
+  const sw=`/* Website Of Babel Scramjet 2 service worker */\n`+
+`importScripts('/controller/controller.sw.js');\n`+
+`self.addEventListener('fetch',event=>{\n`+
+`  try{\n`+
+`    if(self.$scramjetController && $scramjetController.shouldRoute(event)){\n`+
+`      event.respondWith($scramjetController.route(event));\n`+
+`    }\n`+
+`  }catch(error){\n`+
+`    console.error('[Babel Scramjet SW] route error',error);\n`+
+`  }\n`+
+`});\n`+
+`self.addEventListener('install',()=>self.skipWaiting());\n`+
+`self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));\n`;
+  fs.writeFileSync(path.join(out,'scramjet-v2-sw.js'),sw);
 
   const required=[
     path.join(out,'scram','scramjet.js'),
     path.join(out,'scram','scramjet.wasm'),
     path.join(out,'controller','controller.api.js'),
     path.join(out,'controller','controller.inject.js'),
+    path.join(out,'controller','controller.sw.js'),
     path.join(out,'utils','scramjet-utils.js'),
     path.join(out,'libcurl','index.mjs'),
+    path.join(out,'baremod','index.mjs'),
     path.join(out,'scramjet-v2-sw.js')
   ];
   for(const file of required)if(!fs.existsSync(file))throw new Error(`Missing Scramjet v2 build asset: ${path.relative(root,file)}`);
-  console.log('Prepared Scramjet v2 assets: scram, controller, utils, libcurl and root service worker.');
+  console.log('Prepared Scramjet v2 assets: core, controller, utils, Bare transport, optional libcurl transport and routing service worker.');
 }catch(err){
   console.error('Scramjet v2 asset preparation failed:',err.stack||err.message);
   process.exitCode=1;

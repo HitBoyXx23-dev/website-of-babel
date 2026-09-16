@@ -65,32 +65,29 @@ async function v16RulesPage(){
   try{let d=window.BABEL_INTERNET_RULES;try{const r=await fetch('/data/internet-rules.json',{cache:'no-store'});if(r.ok)d=await r.json()}catch{}if(!d||!Array.isArray(d.rules)||d.rules.length!==100)throw new Error('Rules archive unavailable');const host=document.querySelector('#v16Rules');host.innerHTML=`<div class="v16-rule-note">${esc(d.note||'')}</div>`+d.rules.map(r=>`<article data-rule-text="${esc(r.text.toLowerCase())}"><b>${String(r.number).padStart(3,'0')}</b><p>${esc(r.text)}</p><button data-v16-q="Rule ${r.number} internet ${esc(r.text.slice(0,80))}">Research</button></article>`).join('');const input=document.querySelector('#v16RuleFind'),count=document.querySelector('#v16RuleCount');input.oninput=()=>{const q=input.value.trim().toLowerCase();let n=0;host.querySelectorAll('article').forEach(a=>{const hit=!q||a.dataset.ruleText.includes(q)||a.querySelector('b').textContent.includes(q);a.hidden=!hit;if(hit)n++});count.textContent=`${n} / 100`};host.querySelectorAll('[data-v16-q]').forEach(b=>b.onclick=()=>route(v9SearchRoute(b.dataset.v16Q)))}catch(e){document.querySelector('#v16Rules').innerHTML=`<div class="v13-error">${esc(e.message)}</div>`}
 }
 
-let v16Scramjet=null,v16ScramjetFrame=null;
+let v16Scramjet=null,v16ScramjetFrame=null,v16ScramjetKeepalive=null,v16ScramjetTransport='';
 function v16LoadScript(src){return new Promise((resolve,reject)=>{const found=document.querySelector(`script[data-v16-src="${src}"]`);if(found){if(found.dataset.ready==='1')return resolve();found.addEventListener('load',resolve,{once:true});found.addEventListener('error',reject,{once:true});return}const x=document.createElement('script');x.src=src;x.dataset.v16Src=src;x.onload=()=>{x.dataset.ready='1';resolve()};x.onerror=()=>reject(new Error(`Could not load ${src}`));document.head.appendChild(x)})}
 async function v16DeleteDb(name){return new Promise(resolve=>{try{const r=indexedDB.deleteDatabase(name);r.onsuccess=r.onerror=r.onblocked=()=>resolve()}catch{resolve()}})}
+async function v16ResetScramjetStorage(){
+  try{if(indexedDB.databases){for(const db of await indexedDB.databases()){const name=db?.name||'';if(/bare.?mux|scramjet/i.test(name))await v16DeleteDb(name)}}}catch{}
+}
 async function v16MigrateLegacyScramjet(){
-  if(sessionStorage.getItem('babel.scramjet.v2.migrated')==='1')return false;
-  let controlledByV1=false;
+  const key='babel.scramjet.v22.migrated';
+  if(sessionStorage.getItem(key)==='1')return false;
+  let controlledByOld=false;
   try{
     const current=navigator.serviceWorker.controller?.scriptURL||'';
-    controlledByV1=/\/scramjet-sw\.js(?:$|\?)/.test(current);
+    controlledByOld=/\/scramjet-sw\.js(?:$|\?)/.test(current);
     for(const reg of await navigator.serviceWorker.getRegistrations()){
       const urls=[reg.active?.scriptURL,reg.waiting?.scriptURL,reg.installing?.scriptURL].filter(Boolean).join(' ');
       if(/\/scramjet-sw\.js(?:$|\?)/.test(urls))await reg.unregister();
     }
   }catch{}
-  try{
-    if(indexedDB.databases){
-      for(const db of await indexedDB.databases()){
-        const name=db?.name||'';
-        if(/bare.?mux|scramjet/i.test(name))await v16DeleteDb(name);
-      }
-    }
-  }catch{}
-  sessionStorage.setItem('babel.scramjet.v2.migrated','1');
-  return controlledByV1;
+  await v16ResetScramjetStorage();
+  sessionStorage.setItem(key,'1');
+  return controlledByOld;
 }
-async function v16WaitForServiceWorker(reg,timeout=10000){
+async function v16WaitForServiceWorker(reg,timeout=12000){
   if(navigator.serviceWorker.controller)return navigator.serviceWorker.controller;
   await Promise.race([
     navigator.serviceWorker.ready.catch(()=>null),
@@ -99,27 +96,49 @@ async function v16WaitForServiceWorker(reg,timeout=10000){
   ]);
   return navigator.serviceWorker.controller||reg.active||reg.waiting||null;
 }
-async function v16StartScramjet(cfg){
+function v16StartKeepalive(){
+  if(v16ScramjetKeepalive)return;
+  v16ScramjetKeepalive=setInterval(()=>{try{navigator.serviceWorker.controller?.postMessage('keepalive')}catch{}},15000);
+}
+async function v16MakeTransport(cfg,forced=''){
+  const preferred=(forced||cfg.transport||'bare').toLowerCase();
+  if(preferred==='wisp'&&cfg.wispUrl){
+    const mod=await import(cfg.libcurlModule||'/libcurl/index.mjs');
+    const LibcurlClient=mod.default||mod.LibcurlClient;
+    if(!LibcurlClient)throw new Error('libcurl transport did not export LibcurlClient.');
+    v16ScramjetTransport='wisp';
+    return new LibcurlClient({wisp:cfg.wispUrl});
+  }
+  const mod=await import(cfg.bareModule||'/baremod/index.mjs');
+  const BareClient=mod.default||mod.BareClient;
+  if(!BareClient)throw new Error('Bare transport did not export its client.');
+  v16ScramjetTransport='bare';
+  return new BareClient(new URL(cfg.bareUrl||'/bare/',location.href));
+}
+async function v16StartScramjet(cfg,forcedTransport=''){
   if(!('serviceWorker'in navigator))throw new Error('This browser does not support service workers.');
   if(await v16MigrateLegacyScramjet()){
-    sessionStorage.setItem('babel.scramjet.v2.pending','1');
+    sessionStorage.setItem('babel.scramjet.pending.reload','1');
     location.reload();
-    throw new Error('Migrating Scramjet v1 browser state to v2. Reloading once…');
+    throw new Error('Removing the old Scramjet runtime. Reloading once.');
   }
+
+  // Scramjet 2 load order is core -> controller -> utils.
+  await v16LoadScript(cfg.scramjetCore||cfg.scramjetPath||'/scram/scramjet.js');
   await v16LoadScript(cfg.controllerApi||'/controller/controller.api.js');
-  // Utils are optional for the frame, but loading them makes the v2 plugin set available.
   try{await v16LoadScript(cfg.utilsScript||'/utils/scramjet-utils.js')}catch{}
-  const mod=await import(cfg.libcurlModule||'/libcurl/index.mjs');
-  const LibcurlClient=mod.default||mod.LibcurlClient;
-  if(!LibcurlClient)throw new Error('Scramjet v2 libcurl transport did not export LibcurlClient.');
-  const Controller=globalThis.api?.Controller||globalThis.$scramjetController?.Controller||globalThis.scramjetController?.Controller;
-  if(!Controller)throw new Error('Scramjet v2 controller API did not load.');
+
+  const api=globalThis.$scramjetController;
+  if(!api?.Controller)throw new Error('Scramjet 2 controller API did not load.');
+  try{api.assertRuntimeScramjetVersion?.()}catch(e){throw new Error(`Scramjet runtime version mismatch: ${e.message||e}`)}
+
   const reg=await navigator.serviceWorker.register(cfg.serviceWorker||'/scramjet-v2-sw.js',{scope:'/',updateViaCache:'none'});
   try{await reg.update()}catch{}
   const sw=await v16WaitForServiceWorker(reg);
-  if(!sw)throw new Error('Scramjet v2 service worker did not activate.');
-  const transport=new LibcurlClient({wisp:cfg.wispUrl,websocket:cfg.wispUrl});
-  v16Scramjet=new Controller({
+  if(!sw)throw new Error('Scramjet service worker did not become active.');
+
+  const transport=await v16MakeTransport(cfg,forcedTransport);
+  v16Scramjet=new api.Controller({
     serviceworker:sw,
     transport,
     config:{
@@ -129,42 +148,73 @@ async function v16StartScramjet(cfg){
     }
   });
   await v16Scramjet.wait();
+  v16StartKeepalive();
   return v16Scramjet;
 }
-async function v16InitScramjet(cfg){return v16Scramjet||v16StartScramjet(cfg)}
+async function v16InitScramjet(cfg,forcedTransport=''){
+  if(v16Scramjet&&(!forcedTransport||forcedTransport===v16ScramjetTransport))return v16Scramjet;
+  if(v16Scramjet&&forcedTransport&&forcedTransport!==v16ScramjetTransport){
+    const next=await v16MakeTransport(cfg,forcedTransport);
+    if(typeof v16Scramjet.setTransport==='function'){await v16Scramjet.setTransport(next);v16ScramjetTransport=forcedTransport;return v16Scramjet}
+    v16Scramjet=null;
+  }
+  return v16StartScramjet(cfg,forcedTransport);
+}
 async function v16BrowserPage(){
-  setTitle('Browser');let cfg={integratedScramjet:true,engine:'Scramjet 2',engineVersion:'2.0.67-alpha.2',wispUrl:'wss://wisp.mercurywork.shop/',scramjetUrl:''};try{cfg=await json('/api/browser-config')}catch{}
-  app.innerHTML=`<div class="v13-wrap v13-page"><header class="v16-page-head"><span>BABEL BROWSER</span><h1>Reader + Scramjet 2</h1><p>Reader turns public pages into Babel dossiers. Scramjet 2 opens compatible public websites in an isolated proxy frame using the current controller + transport architecture, without BareMux.</p></header><section class="v16-browser"><div class="v16-browser-bar"><button id="v16Back">←</button><button id="v16Forward">→</button><form id="v16BrowserForm"><input id="v16BrowserURL" placeholder="URL or search phrase"><button>Go</button></form><select id="v16BrowserMode"><option value="reader">Babel Reader</option><option value="scramjet">Scramjet 2</option></select></div><div class="v16-browser-status" id="v16BrowserStatus">Ready · ${esc(cfg.engine||'Scramjet 2')} ${esc(cfg.engineVersion||'')} · relay ${esc(cfg.wispUrl||'not configured')}</div><div class="v16-browser-stage" id="v16BrowserStage"><div class="v16-browser-empty"><b>B</b><span>Enter a public website or search phrase.</span></div></div></section></div>`;
-  const stage=document.querySelector('#v16BrowserStage'),status=document.querySelector('#v16BrowserStatus'),input=document.querySelector('#v16BrowserURL'),mode=document.querySelector('#v16BrowserMode'),hist=[];let hi=-1;
-  const normalize=v=>{v=v.trim();if(!v)return'';if(/^https?:\/\//i.test(v))return v;if(/^[\w.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(v))return'https://'+v;return''};
+  setTitle('Browser');
+  let cfg={integratedScramjet:true,engine:'Scramjet 2',engineVersion:'2.0.67-alpha.2',transport:'bare',bareUrl:'/bare/',wispUrl:'',scramjetUrl:''};
+  try{cfg=await json('/api/browser-config')}catch{}
+  const canWisp=!!cfg.wispUrl;
+  app.innerHTML=`<div class="v13-wrap v13-page v22-browser-page"><header class="v16-page-head"><span>BABEL BROWSER</span><h1>Browse inside Babel</h1><p>Scramjet 2 now uses Babel's same-deployment Bare transport by default on Vercel. Reader mode is the resilient fallback. A private Wisp relay can be configured for sites that require target WebSockets.</p></header><section class="v16-browser v22-browser"><div class="v22-tabbar"><button class="active">NEW TAB</button><span id="v22EngineBadge">ENGINE · READY</span><button id="v22ResetEngine">RESET ENGINE</button></div><div class="v16-browser-bar"><button id="v16Back" title="Back">←</button><button id="v16Forward" title="Forward">→</button><form id="v16BrowserForm"><input id="v16BrowserURL" autocomplete="off" spellcheck="false" placeholder="Enter a URL or search Babel"><button>GO</button></form><select id="v16BrowserMode" aria-label="Browser mode"><option value="scramjet">Scramjet 2</option><option value="reader">Babel Reader</option>${canWisp?'<option value="wisp">Scramjet + Wisp</option>':''}</select></div><div class="v22-browser-tools"><button id="v22Home">HOME</button><button id="v22Reload">RELOAD</button><button id="v22Reader">READER</button><button id="v22Network">MAP SITE</button><span id="v22Isolation">${crossOriginIsolated?'ISOLATED':'STANDARD CONTEXT'}</span></div><div class="v16-browser-status" id="v16BrowserStatus">Ready · ${esc(cfg.engine||'Scramjet 2')} ${esc(cfg.engineVersion||'')} · ${esc(cfg.transport||'bare')} transport</div><div class="v16-browser-stage" id="v16BrowserStage"><div class="v16-browser-empty"><b>B</b><span>Enter a public website. Search phrases are sent to Search Everywhere.</span><small>Vercel mode: ordinary HTTP browsing uses Babel Bare. WebSocket-heavy sites need an optional Wisp backend.</small></div></div></section><section class="v22-browser-info"><div><b>SCRAMJET</b><p>Interactive rewritten browsing with cookies, navigation and scripts.</p></div><div><b>READER</b><p>Fast normalized text, images, media, files and links when a full browser is unnecessary.</p></div><div><b>NETWORK</b><p>Map the current site's internal pages and outgoing links in Network of Babel.</p></div></section></div>`;
+
+  const stage=document.querySelector('#v16BrowserStage'),status=document.querySelector('#v16BrowserStatus'),input=document.querySelector('#v16BrowserURL'),mode=document.querySelector('#v16BrowserMode'),badge=document.querySelector('#v22EngineBadge');
+  const hist=[];let hi=-1,currentUrl='',lastMode='';
+  const normalize=v=>{v=String(v||'').trim();if(!v)return'';if(/^https?:\/\//i.test(v))return v;if(/^[\w.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(v))return'https://'+v;return''};
+  const setStatus=(text,state='')=>{status.textContent=text;badge.textContent=`ENGINE · ${state||text.split('·')[0].trim().toUpperCase()}`};
+  const addHistory=(url,m)=>{hist.splice(hi+1);hist.push({url,mode:m});hi=hist.length-1};
+  const renderReader=(url,note='')=>{stage.innerHTML=`${note?`<div class="v22-fallback-note">${esc(note)}</div>`:''}<iframe class="v16-browser-frame" src="${v9ReaderRoute(url)}" title="Babel Reader"></iframe>`;setStatus(`Babel Reader · ${url}`,'READER')};
+
   async function open(v,push=true){
-    const url=normalize(v);if(!url){route(v9SearchRoute(v));return}input.value=url;if(push){hist.splice(hi+1);hist.push({url,mode:mode.value});hi=hist.length-1}
-    if(mode.value==='reader'){stage.innerHTML=`<iframe class="v16-browser-frame" src="${v9ReaderRoute(url)}" title="Babel Reader"></iframe>`;status.textContent='Babel Reader · normalized internal view';return}
-    if(!crossOriginIsolated){
-      sessionStorage.setItem('babel.scramjet.pending.url',url);sessionStorage.setItem('babel.scramjet.pending.mode','scramjet');
-      status.textContent='Reloading Browser with cross-origin isolation for Scramjet 2…';
-      location.assign('/browser?sj=1');return;
-    }
-    status.textContent='Starting Scramjet 2…';stage.innerHTML='<div class="v16-browser-empty"><b>SJ2</b><span>Starting controller + libcurl transport…</span></div>';
+    const url=normalize(v);if(!url){if(String(v||'').trim())route(v9SearchRoute(String(v).trim()));return}
+    currentUrl=url;input.value=url;const selected=mode.value;if(push)addHistory(url,selected);lastMode=selected;
+    if(selected==='reader'){renderReader(url);return}
+
+    const transport=selected==='wisp'?'wisp':'bare';
+    setStatus(`Starting Scramjet 2 · ${transport} transport`,'STARTING');
+    stage.innerHTML='<div class="v16-browser-empty"><b>SJ2</b><span>Loading core, controller, service worker and transport…</span></div>';
     try{
-      const sj=await v16InitScramjet(cfg);
+      const sj=await v16InitScramjet(cfg,transport);
       stage.innerHTML='';
-      const iframe=document.createElement('iframe');iframe.className='v16-browser-frame';iframe.title='Scramjet 2';stage.appendChild(iframe);
-      const utils=globalThis.$scramjetUtils||globalThis.utils;const plugins=[];
+      const iframe=document.createElement('iframe');iframe.className='v16-browser-frame';iframe.title='Scramjet 2 Browser';stage.appendChild(iframe);
+      const utils=globalThis.$scramjetUtils;const plugins=[];
       try{if(utils?.HttpCachePlugin)plugins.push(new utils.HttpCachePlugin())}catch{}
+      try{if(utils?.UrlWatcherPlugin)plugins.push(new utils.UrlWatcherPlugin(next=>{if(!next)return;currentUrl=String(next);input.value=currentUrl;setStatus(`Scramjet 2 · ${v16ScramjetTransport} · ${currentUrl}`,'ONLINE')}))}catch{}
       try{if(utils?.CatchEscapedLinksPlugin)plugins.push(new utils.CatchEscapedLinksPlugin(()=>new URL(location.href)))}catch{}
       v16ScramjetFrame=sj.createFrame(iframe,{plugins});
       v16ScramjetFrame.go(url);
-      status.textContent=`Scramjet 2 · ${url}`;
+      setStatus(`Scramjet 2 · ${v16ScramjetTransport} · ${url}`,'ONLINE');
     }catch(e){
-      if(cfg.scramjetUrl){const src=cfg.scramjetUrl.includes('{url}')?cfg.scramjetUrl.replace('{url}',encodeURIComponent(url)):cfg.scramjetUrl+(cfg.scramjetUrl.includes('?')?'&':'?')+'url='+encodeURIComponent(url);stage.innerHTML=`<iframe class="v16-browser-frame" src="${esc(src)}" title="Remote Scramjet"></iframe>`;status.textContent='Integrated Scramjet 2 failed; using configured remote endpoint.'}
-      else{stage.innerHTML=`<div class="v16-browser-error"><b>Scramjet 2 could not start.</b><p>${esc(e.message||String(e))}</p><p>Redeploy after <code>npm install</code> and <code>npm run build</code>. The browser also needs a working Wisp relay in <code>SCRAMJET_WISP_URL</code>.</p></div>`;status.textContent='Scramjet 2 unavailable'}
+      console.error('[Babel Browser] Scramjet start failed',e);
+      if(cfg.scramjetUrl){
+        const src=cfg.scramjetUrl.includes('{url}')?cfg.scramjetUrl.replace('{url}',encodeURIComponent(url)):cfg.scramjetUrl+(cfg.scramjetUrl.includes('?')?'&':'?')+'url='+encodeURIComponent(url);
+        stage.innerHTML=`<iframe class="v16-browser-frame" src="${esc(src)}" title="Remote Scramjet"></iframe>`;setStatus('Remote Scramjet fallback','REMOTE');
+      }else{
+        renderReader(url,`Interactive browser unavailable (${e.message||String(e)}). Babel switched to Reader mode for this page.`);
+      }
     }
   }
+
   document.querySelector('#v16BrowserForm').onsubmit=e=>{e.preventDefault();open(input.value)};
-  document.querySelector('#v16Back').onclick=()=>{if(hi>0){hi--;mode.value=hist[hi].mode;open(hist[hi].url,false)}};
-  document.querySelector('#v16Forward').onclick=()=>{if(hi<hist.length-1){hi++;mode.value=hist[hi].mode;open(hist[hi].url,false)}};
-  const pending=sessionStorage.getItem('babel.scramjet.pending.url');if(pending){sessionStorage.removeItem('babel.scramjet.pending.url');sessionStorage.removeItem('babel.scramjet.pending.mode');mode.value='scramjet';input.value=pending;setTimeout(()=>open(pending),0)}
+  document.querySelector('#v16Back').onclick=()=>{if(hi>0){hi--;mode.value=hist[hi].mode;open(hist[hi].url,false)}else try{v16ScramjetFrame?.element?.contentWindow?.history.back()}catch{}};
+  document.querySelector('#v16Forward').onclick=()=>{if(hi<hist.length-1){hi++;mode.value=hist[hi].mode;open(hist[hi].url,false)}else try{v16ScramjetFrame?.element?.contentWindow?.history.forward()}catch{}};
+  document.querySelector('#v22Home').onclick=()=>{currentUrl='';input.value='';stage.innerHTML='<div class="v16-browser-empty"><b>B</b><span>Enter a public website. Search phrases are sent to Search Everywhere.</span></div>';setStatus('Ready · Babel Browser','READY')};
+  document.querySelector('#v22Reload').onclick=()=>{if(currentUrl)open(currentUrl,false)};
+  document.querySelector('#v22Reader').onclick=()=>{if(currentUrl){mode.value='reader';renderReader(currentUrl)}};
+  document.querySelector('#v22Network').onclick=()=>{if(currentUrl){try{route(`/network?q=${encodeURIComponent(new URL(currentUrl).hostname)}`)}catch{}}};
+  document.querySelector('#v22ResetEngine').onclick=async()=>{setStatus('Resetting Scramjet state…','RESET');try{for(const reg of await navigator.serviceWorker.getRegistrations()){const urls=[reg.active?.scriptURL,reg.waiting?.scriptURL,reg.installing?.scriptURL].filter(Boolean).join(' ');if(/scramjet-v2-sw\.js/.test(urls))await reg.unregister()}await v16ResetScramjetStorage();sessionStorage.removeItem('babel.scramjet.v22.migrated')}catch{}location.reload()};
+  mode.onchange=()=>{if(currentUrl)open(currentUrl,false)};
+
+  const pending=sessionStorage.getItem('babel.scramjet.pending.url');if(pending){sessionStorage.removeItem('babel.scramjet.pending.url');input.value=pending;setTimeout(()=>open(pending),0)}
 }
 
 const v16BaseRender=renderRoute;

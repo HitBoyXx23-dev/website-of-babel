@@ -114,9 +114,34 @@
           "value": "require-corp"
         }
       ]
+    },
+    {
+      "source": "/bare/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "Cross-Origin-Embedder-Policy",
+          "value": "require-corp"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/bare",
+      "destination": "/api/babel?endpoint=bare"
+    },
+    {
+      "source": "/bare/:path*",
+      "destination": "/api/babel?endpoint=bare&path=:path*"
+    },
     {
       "source": "/api/browser-config",
       "destination": "/api/babel?endpoint=browser-config"
